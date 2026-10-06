@@ -1,8 +1,18 @@
-numpy
-pandas
-matplotlib
-scikit-learn
-scipy
-openpyxl
-pyarrow
-pyyaml
+# Inter IIT Tech Meet 15.0 - Track A submission dependencies
+# Pinned to the versions this submission was developed and validated against,
+# as required by the problem statement ("requirements.txt with all required
+# packages and versions").
+
+# --- used directly by src/ ---
+numpy==2.5.3           # arrays, linear algebra (covariance, ERC solver)
+pandas==3.0.6          # panel construction, rolling statistics
+scipy==1.18.1          # scipy.stats.t for two-sided p-values in signals.py
+PyYAML==6.0.3          # reading config.yaml
+
+# --- used by the organiser's backtester.py / run_backtest.py ---
+matplotlib==3.11.2     # results/tearsheet.png
+pyarrow==25.0.1        # Track B parquet loading
+
+# --- present in the original template; retained for compatibility ---
+scikit-learn==1.9.1
+openpyxl==3.1.5

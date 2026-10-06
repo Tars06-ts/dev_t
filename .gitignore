@@ -227,3 +227,7 @@ results/
 
 # backtester design
 ARCHITECTURE.md
+Track-B/
+.venv/
+__pycache__/
+*.parquet
