@@ -1,6 +1,6 @@
 # Track A — research questionnaire
 
-**90 questions in 9 parts.** Parts 1–6 are numbered 1–36; Parts 7–9 use Q37–Q90.
+**91 questions in 9 parts.** Parts 1–6 are numbered 1–36; Parts 7–9 use Q37–Q91.
 
 Work through this yourself. Every question below is one you should be able to answer
 from the data, and together they justify every choice baked into `src/`.
@@ -114,13 +114,14 @@ Read `../LOOK_INTO.md` first if you have not — it is the map, this is the home
 34. Run `sweep.py --axis costs`. How much Sharpe do you lose per basis point of
     slippage? `config.yaml` sets slippage to 0 — is that what the graders will use?
 
-## Part 5 — Still missing (required deliverable)
+## Part 5 — Walk-forward validation
 
-35. **Walk-forward validation is not implemented.** The problem statement requires
-    rolling train/test windows. Everything currently in the repo is single-split
-    in-sample. Design it: how long is each training window, how far does it step, and
-    what exactly are you re-fitting in each one given the strategy has no fitted
-    parameters?
+*Now implemented in `walkforward.py` (504-session train / 126-session test). Run it,
+then answer these — Part 9c covers the trap it contains.*
+
+35. The strategy has **no fitted coefficients** — there is no regression to re-estimate
+    each fold. So what is actually being validated by a walk-forward here? Read the
+    module docstring, then decide whether you agree with the answer it gives.
 36. What would you conclude if walk-forward Sharpe were materially below in-sample
     Sharpe? What if it were higher?
 
@@ -234,15 +235,27 @@ because roughly 117% of it turns over at each rebalance.
 - Q49: Is high turnover a problem *here*, given this account size and these ADVs?
   Answer it with the cost curve from Q42, not with intuition.
 
-**CAGR and Sharpe are modest.** 4.23% and 0.55. Also, the book realises ~7.7%
-volatility against a 10% target — it is under-using its risk budget.
+**CAGR and Sharpe are modest.** 4.23% and 0.55 at the time this was written. Also,
+the book realises ~7.7% volatility against a 10% target.
 
-- Q50: Why does the realised vol fall short of the target? (Look at `gross` and
-  `ex_ante_vol` in the diagnostics frame, and at where `apply_caps` binds.)
-- Q51: The sweep shows `target_vol=0.15` scores *worse* (0.388) than `target_vol=0.10`
-  (0.55). That is backwards — raising the risk target should scale return and leave
-  Sharpe roughly unchanged. **Work out why.** This is an unexplained result in the
-  current code and the most interesting open question in the project.
+*Note: Q50-Q51 below were written when `target_vol=0.15` appeared to score far worse
+than 0.10 (0.388 vs 0.55) under the old `smooth=1` configuration. That gap has since
+been explained and is much smaller under the current ensemble — see the corrected
+framing. Left here because working out the answer yourself is the point.*
+
+- Q50: Why does realised vol fall short of the target? Find the line
+  `w = w * min(cfg.target_vol / ev, 1.0)` in `build_weights`. What does the
+  `min(..., 1.0)` do, and why can the target therefore only ever *reduce* risk?
+  Why would levering up to reach 10% be illegal here?
+- Q51: Measure how often the target actually binds at different settings. You should
+  find roughly: 0.06 binds 35/65 rebalances, 0.10 binds 9/91, **0.15 binds 0/99**.
+  Confirm for yourself that `target_vol=0.15` and `target_vol=None` produce *identical*
+  results, and explain why.
+- Q52: Given that, the vol target is not a scaling knob — it is a **brake that only
+  engages in the highest-forecast-volatility rebalances**. At 0.10 it engages 9 times
+  and gains about +0.04 Sharpe over no target at all; at 0.06 it over-brakes and costs
+  return (CAGR 11.4% -> 8.1%). Is 0.10 the right setting, or is that 9-rebalance
+  sample too small to justify the parameter at all? **Argue it either way.**
 
 ## 7c. Improvements worth trying
 
@@ -252,30 +265,31 @@ before and after, and keep the one the evidence supports.
 **1. Rank hysteresis (buffer zones).** Today a name leaves the book the moment it
 drops out of the top 6. Instead: enter at top 6, but only exit when it falls below
 rank 10. Standard fix for ranking churn; attacks turnover without touching the signal.
-- Q52: Implement it in `select_names`. How much does turnover fall? What happens to
+- Q53: Implement it in `select_names`. How much does turnover fall? What happens to
   Sharpe net of 5bp slippage?
 
 **2. Signal smoothing.** Average the score over the last 3–5 days before ranking, so
 one noisy session cannot flip a position.
-- Q53: Does smoothing help the IC, hurt it, or just cut turnover? Smoothing a signal
+- Q54: Does smoothing help the IC, hurt it, or just cut turnover? Smoothing a signal
   always reduces churn — the question is whether it also destroys the edge.
 
 **3. Make net-of-cost the headline number.** Evaluate at 5bp by default rather than 0.
-- Q54: Which configurations in the sweep survive a realistic cost assumption? Does the
+- Q55: Which configurations in the sweep survive a realistic cost assumption? Does the
   *ranking* of configurations change, or just the level?
 
-**4. Walk-forward validation.** Still the biggest gap (Q35–36).
+**4. Walk-forward validation.** Built — `walkforward.py`. See Part 9c before trusting
+its headline numbers; they contain a confound.
 
 ## 7d. How good can this realistically get?
 
 Before chasing a high Sharpe, work out the ceiling.
 
-- Q55: Look up **Grinold's Fundamental Law of Active Management**: IR ≈ IC × √breadth.
-- Q56: With an IC of about 0.07, 24 assets, and rebalancing every 21 days, what is
+- Q56: Look up **Grinold's Fundamental Law of Active Management**: IR ≈ IC × √breadth.
+- Q57: With an IC of about 0.07, 24 assets, and rebalancing every 21 days, what is
   breadth per year — and what IR does the law imply as an upper bound?
-- Q57: That bound assumes perfect implementation using *all* assets. You use 12 of 24
+- Q58: That bound assumes perfect implementation using *all* assets. You use 12 of 24
   and have gross/position caps. What does that do to the realistic target?
-- Q58: Given your answer, is the current 0.55 a failure, or close to the achievable
+- Q59: Given your answer, is the current 0.55 a failure, or close to the achievable
   range for this dataset? **If someone offers you a Sharpe of 2 on this data, what
   should you suspect?**
 
@@ -300,12 +314,12 @@ i.e. 0.55 -> 0.78.
 
 **Result: 0.574. A ratio of 1.04x, not 1.41x.** The prediction failed.
 
-- Q59: Why? Grinold's breadth counts *independent* bets. What is the mean pairwise
+- Q60: Why? Grinold's breadth counts *independent* bets. What is the mean pairwise
   correlation of this universe (from `data-analysis.ipynb`), and what does that do to
   the effective number of independent bets when you add the middle-ranked names?
-- Q60: The middle-ranked names also carry the weakest signal. Under a linear model
+- Q61: The middle-ranked names also carry the weakest signal. Under a linear model
   they get small weights. How much new information can they actually add?
-- Q61: This is a useful negative result for the report. Write up why a theoretically
+- Q62: This is a useful negative result for the report. Write up why a theoretically
   motivated change can still fail, and what that tells you about applying textbook
   formulas to correlated assets.
 
@@ -324,9 +338,9 @@ The backtest loved it: `exit_buffer=9` took Sharpe from 0.435 to 1.05 at 5bp.
    ~8% volatility that is worth about **0.05 Sharpe**. The measured gain was **+0.62**
    — roughly ten times what the mechanism can pay for.
 
-- Q62: Reproduce that cost calculation yourself. If a change earns ten times more than
+- Q63: Reproduce that cost calculation yourself. If a change earns ten times more than
   its stated mechanism can deliver, what is the most likely explanation?
-- Q63: Hysteresis is left available as `exit_buffer=N`. Can you find a *different*
+- Q64: Hysteresis is left available as `exit_buffer=N`. Can you find a *different*
   justification for it that the evidence supports? (Hint: does it change the
   signal's information content at all, or only when you trade?)
 
@@ -370,17 +384,17 @@ values.
 Its IC lands at 0.087 (t = 3.84), *between* its members, exactly as theory predicts
 for an average.
 
-- Q64: Re-derive why IR is proportional to IC, and what Sharpe a 1.22x IC improvement
+- Q65: Re-derive why IR is proportional to IC, and what Sharpe a 1.22x IC improvement
   justifies.
-- Q65: Smoothing did *not* reduce turnover (12,577% -> 12,342%). The original
+- Q66: Smoothing did *not* reduce turnover (12,577% -> 12,342%). The original
   rationale was "it reduces churn". That was wrong. Why does averaging the score not
   reduce trading here?
-- Q66: What is a smoothed 21-day reversal signal, mechanically? Work out the effective
+- Q67: What is a smoothed 21-day reversal signal, mechanically? Work out the effective
   weighting over past returns and relate it to simply using a longer lookback. Does
   the lookback sweep from Q20 agree?
-- Q67: Run the paired test yourself for a smoothing value of your choice. Why is the
+- Q68: Run the paired test yourself for a smoothing value of your choice. Why is the
   paired version more powerful than comparing two independent t-statistics?
-- Q68: **Is an ensemble genuinely immune to the search that found it?** Removing the
+- Q69: **Is an ensemble genuinely immune to the search that found it?** Removing the
   final selection step does not undo the fact that the smoothing *family* was
   discovered by searching. Argue both sides.
 
@@ -398,13 +412,13 @@ Results (5bp slippage, 7 folds, 875 OOS days):
 | fixed baseline, no selection | 0.53 |
 | **`smooth_16` held fixed** | **1.73** |
 
-- Q69: The adaptive selection (1.32) does **worse** than simply holding one good
+- Q70: The adaptive selection (1.32) does **worse** than simply holding one good
   configuration for the whole period (1.73). What does that tell you about selecting
   parameters on a 2-year training window?
-- Q70: 4 different configurations won across 7 folds. Is that stability or noise?
-- Q71: Drop the best fold and the selection result falls 1.32 -> 0.96. How much should
+- Q71: 4 different configurations won across 7 folds. Is that stability or noise?
+- Q72: Drop the best fold and the selection result falls 1.32 -> 0.96. How much should
   one 6-month window be allowed to carry a conclusion?
-- Q72: **The deepest problem with 8d.** The candidate list in `walkforward.py` was
+- Q73: **The deepest problem with 8d.** The candidate list in `walkforward.py` was
   written *after* looking at in-sample sweep results — `smooth_16` and `hysteresis_9`
   are in there precisely because the in-sample sweep flagged them. In what sense are
   these numbers "out of sample"? What would a genuinely clean test require?
@@ -435,31 +449,31 @@ python -m src.research.overfitting_audit
 
 ## 9a. The test that matters most — Deflated Sharpe
 
-- Q73: Read about the **Deflated Sharpe Ratio** (Bailey & López de Prado 2014). The
+- Q74: Read about the **Deflated Sharpe Ratio** (Bailey & López de Prado 2014). The
   ordinary Sharpe t-test asks "could ONE random strategy have scored this?". After
   trying N configurations, what is the correct question instead?
-- Q74: Run the audit. Given ~120 configurations examined, what is the *expected
+- Q75: Run the audit. Given ~120 configurations examined, what is the *expected
   maximum* Sharpe under the null? Compare it to the observed Sharpe. How much margin
   is there really?
-- Q75: The audit prints DSR against several trial counts. **Below roughly how many
+- Q76: The audit prints DSR against several trial counts. **Below roughly how many
   independent trials does the result clear 0.95?** Is that plausible given what was
   actually tried?
-- Q76: `N_TRIALS_EXAMINED = 120` is hardcoded at the top of `overfitting_audit.py`.
+- Q77: `N_TRIALS_EXAMINED = 120` is hardcoded at the top of `overfitting_audit.py`.
   Lowering it turns a FAIL into a PASS. Why is honestly maintaining that number the
   single most important discipline in this whole file?
-- Q77: Many of the 120 configurations were near-duplicates (e.g. smooth=10 vs 11).
+- Q78: Many of the 120 configurations were near-duplicates (e.g. smooth=10 vs 11).
   Does that mean the *effective* number of independent trials is lower? How would you
   estimate it, and does it change the verdict?
 
 ## 9b. Tests the strategy passes
 
-- Q78: **Monte-Carlo null.** 40 random rankings were pushed through the identical
+- Q79: **Monte-Carlo null.** 40 random rankings were pushed through the identical
   pipeline: mean −0.05, sd 0.39, max 0.70, and none reached 1.32. What exactly does
   this rule out — and, importantly, what does it *not* rule out?
-- Q79: Why does the Monte-Carlo null's sd (0.39) match the analytic `1/sqrt(years)`?
+- Q80: Why does the Monte-Carlo null's sd (0.39) match the analytic `1/sqrt(years)`?
   Verify that the expected max of 120 draws from that null matches the DSR's figure
   of 1.127. Two independent methods agreeing is worth noting in the report.
-- Q80: Sub-period Sharpes are 1.28 / 0.95 / 2.19, and 1.60 excluding COVID. Positive
+- Q81: Sub-period Sharpes are 1.28 / 0.95 / 2.19, and 1.60 excluding COVID. Positive
   everywhere. Is consistent sub-period performance sufficient evidence against
   overfitting? Why not?
 
@@ -468,25 +482,25 @@ python -m src.research.overfitting_audit
 Walk-forward appeared to vindicate everything: selection 1.39 vs baseline 0.53. It
 does not.
 
-- Q81: Compute train→test decay for every configuration. It is **positive for all of
+- Q82: Compute train→test decay for every configuration. It is **positive for all of
   them**, including `momentum` (+0.18) — a signal already shown to have no predictive
   power (Fama-MacBeth t = 0.43). **A dead signal cannot generalise.** What is actually
   causing the apparent improvement?
-- Q82: Given that, how much of the walk-forward "out-of-sample success" is skill and
+- Q83: Given that, how much of the walk-forward "out-of-sample success" is skill and
   how much is calendar? What does this tell you about always including a known-dead
   control in any validation you run?
-- Q83: Despite the confound, in the three folds where the ensemble was selected *on
+- Q84: Despite the confound, in the three folds where the ensemble was selected *on
   training data only* it beat the baseline all three times (+0.83 vs +0.36, −0.34 vs
   −1.03, +0.04 vs −0.95). Why is "beats the alternative" a more robust claim than
   "achieves Sharpe X"?
 
 ## 9d. The unexplained half
 
-- Q84: IC improved 1.22x. The tail spread the portfolio actually trades improved
+- Q85: IC improved 1.22x. The tail spread the portfolio actually trades improved
   1.32x. Both predict a Sharpe near 0.73. The backtest shows 1.32. **Roughly half the
   performance has no mechanism behind it.** Why is unexplained performance the most
   reliable overfitting signature there is — more reliable than any single statistic?
-- Q85: P&L concentration: removing the best 10 days (0.7% of the sample) cuts Sharpe
+- Q86: P&L concentration: removing the best 10 days (0.7% of the sample) cuts Sharpe
   1.40 → 1.00. Is that fragility, or is it normal for a market-neutral book? Find a
   comparison point before deciding.
 
@@ -497,12 +511,12 @@ it beats the baseline out of sample, its construction has no tuned parameter, an
 reverting would cost real performance for no methodological gain — because the
 Deflated Sharpe can be disclosed either way.
 
-- Q86: Do you agree? The alternative is reverting to `smooth=1` (Sharpe 0.55, DSR
+- Q87: Do you agree? The alternative is reverting to `smooth=1` (Sharpe 0.55, DSR
   passes comfortably, nothing unexplained). Argue the other side.
-- Q87: The grading rubric is roughly 50% methodology, 15% OOS performance. How should
+- Q88: The grading rubric is roughly 50% methodology, 15% OOS performance. How should
   that weighting affect the choice between "higher number" and "fully defensible
   number"?
-- Q88: Write the results paragraph for your report in your own words. It must contain
+- Q89: Write the results paragraph for your report in your own words. It must contain
   the in-sample figure, the DSR, and the mechanism-justified estimate. There is a
   draft in `LOOK_INTO.md` — do not copy it, argue it yourself, because this is what
   the interview will probe.
@@ -513,8 +527,8 @@ The sequence in Parts 7–8 was: search → keep the winner → construct a mech
 for it. That is the standard way to overfit, and it happened here even while actively
 trying to avoid it.
 
-- Q89: The ensemble removed the *final* selection step. Why does that not undo the
+- Q90: The ensemble removed the *final* selection step. Why does that not undo the
   search that found the smoothing family in the first place?
-- Q90: Design the protocol you would follow if you started again. When would you
+- Q91: Design the protocol you would follow if you started again. When would you
   decide what to test? When would you look at a backtest? What would you have to
   write down in advance?

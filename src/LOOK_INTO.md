@@ -136,7 +136,7 @@ Four sizing rules, ordered by how much they trust the covariance matrix:
 | `n_long` / `n_short` | 6 / 6 | Symmetric and dollar-neutral. An 8/4 tilt scored a better Sharpe and was **rejected** — every stock in this sample rose, so a long tilt harvests bull-market beta, not alpha. |
 | `max_gross` | 0.95 | Hard limit is 1.0 and the book drifts between rebalances; this is the headroom. |
 | `max_position` | 0.12 | Stops one name dominating a 12-name book. |
-| `target_vol` | 0.10 | Ex-ante annualised. Forecast averages 7.7% against 7.7% realised — the risk model is well calibrated. |
+| `target_vol` | 0.10 | Ex-ante annualised, and **one-sided** — `min(target/forecast, 1.0)` can only cut risk, never add it, because levering up would breach the 1.0 limit. It binds in just 9 of 91 rebalances, so it is a brake for high-volatility periods, not a scaling knob. At 0.15 it never binds and is identical to switching it off. Forecast averages 7.7% against 7.7% realised — well calibrated. |
 | `no_trade_band` | 0.005 | Don't trade to close a 0.5% weight gap; the commission exceeds the benefit. |
 | `exit_buffer` | 0 (off) | Hysteresis. **Available but not adopted** — see 8b below. |
 | `selection` | `topn` | Full cross-section weighting available but **failed its test** — see 8a. |
@@ -147,7 +147,7 @@ Four sizing rules, ordered by how much they trust the covariance matrix:
 
 | file | what |
 |---|---|
-| `TODO_RESEARCH.md` | the questionnaire — 90 questions in 9 parts, start here |
+| `TODO_RESEARCH.md` | the questionnaire — 91 questions in 9 parts, start here |
 | `data-analysis.ipynb` | EDA skeleton, you write it |
 | `model-training.ipynb` | signal/model skeleton, you write it |
 | `signal_eval.py` | tool: IC, Fama-MacBeth, spread portfolios, bootstrap |
@@ -188,6 +188,25 @@ you get is an honest estimate rather than a maximum. Its IC lands between the me
 (0.087) exactly as theory predicts.
 
 ---
+
+## Four framings to avoid (corrected in `research/EXTRA_SHI.md`)
+
+Easy mistakes to make when writing this up, each of which an interviewer can unpick:
+
+1. **Do not credit Grinold's law with the ~0.70 estimate.** That comes from IC-ratio
+   scaling (0.55 × 1.22 = 0.67) and tail-spread scaling (0.55 × 1.32 = 0.73). Grinold
+   applied directly gives `0.07 × √288 ≈ 1.19`, a ceiling. Worse, its breadth
+   prediction was tested here and *failed* (1.41× predicted, 1.04× delivered) — keep
+   that as a separate and genuinely strong point.
+2. **Realised vol is not 7.7% because a cap "overrode" the target.** The target is
+   one-sided and mostly does not bind. See the `target_vol` row above.
+3. **Selecting a signal on a rolling training window is not look-ahead bias.** It is
+   legitimate, and `walkforward.py` does it. The reason `ST_REV_21` is hardcoded is
+   empirical: per-fold selection *underperformed* a fixed choice (1.32 vs 1.73, with
+   4 different winners across 7 folds).
+4. **The empty-dict hold is not an "exploit"**, and commission was not eating the
+   alpha — it is only 0.225%/yr. The larger effect of restating weights daily was
+   that it silently converted a 21-day schedule into daily drift-correction.
 
 ## The number to quote, and the number not to
 
