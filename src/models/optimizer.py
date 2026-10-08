@@ -57,7 +57,13 @@ class SizingConfig:
     n_short: int = 6
     method: str = "inverse_vol"    # inverse_vol | erc | min_variance | equal
     dollar_neutral: bool = True
-    max_gross: float = 0.98        # stay strictly under the RuleGuard's 1.0
+    max_gross: float = 0.95        # headroom below the RuleGuard's hard 1.0.
+                                   # The organiser's limit is 1.0, not 0.95 -- the
+                                   # 5% buffer absorbs drift between rebalances, so
+                                   # actual holdings never approach the ceiling and
+                                   # the guard never has to clamp us. Must match the
+                                   # value in engine.py SIZING; a bare SizingConfig()
+                                   # is reachable via build_weights(cfg=None).
     max_position: float = 0.12     # per-name cap on |w|
     target_vol: Optional[float] = 0.10   # annualised ex-ante target; None disables
     cov_window: int = 126
