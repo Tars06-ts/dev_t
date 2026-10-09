@@ -1,7 +1,7 @@
 # What each file does, and why each parameter is what it is
 
-Read this before `research/RESEARCH_LOG.md`. This is the map; that is the homework.
-Everything here is one or two lines — the reasoning in depth lives in the questionnaire.
+Read this before `research/RESEARCH_LOG.md`. This is the map; that is the reasoning
+in full. Everything here is one or two lines.
 
 ---
 
@@ -147,9 +147,9 @@ Four sizing rules, ordered by how much they trust the covariance matrix:
 
 | file | what |
 |---|---|
-| `RESEARCH_LOG.md` | the questionnaire — 91 questions in 9 parts, start here |
-| `data-analysis.ipynb` | EDA skeleton, you write it |
-| `model-training.ipynb` | signal/model skeleton, you write it |
+| `RESEARCH_LOG.md` | the research log — 9 parts, start here |
+| `data-analysis.ipynb` | EDA: data quality, distributions, volatility, correlation |
+| `model-training.ipynb` | signal selection, robustness, sizing, validation, overfitting audit |
 | `signal_eval.py` | tool: IC, Fama-MacBeth, spread portfolios, bootstrap |
 | `sweep.py` | tool: re-runs the backtest across settings (defaults to 5bp slippage) |
 | `walkforward.py` | tool: rolling train/test validation |

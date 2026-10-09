@@ -1,6 +1,6 @@
 # Track A — how to run and verify
 
-Everything below runs from the repo root (`/home/tar/dev_t`) with the project venv.
+Everything below runs from the repository root with the project venv.
 Prefix commands with `.venv/bin/python`, or activate first: `source .venv/bin/activate`.
 
 The dataset must be at `data/Dataset_PS-A.csv` (that is what `config.yaml` points to).
@@ -31,9 +31,9 @@ print(panel.describe())
 ```
 
 `panel.report` carries the quality audit (what the cleaner repaired, per-ticker
-coverage) and `panel.describe()` the annualised return characteristics. Work through
-this in `src/research/data-analysis.ipynb` — Part 1 of `TODO_RESEARCH.md` is the
-question list.
+coverage) and `panel.describe()` the annualised return characteristics. This is worked
+through in `src/research/data-analysis.ipynb`, which answers Part 1 of
+`RESEARCH_LOG.md`.
 
 ## 3. Compare the ranking signals
 
@@ -77,15 +77,16 @@ mean gross leverage 0.83, **0 leverage violations**, no bankruptcy.
 .venv/bin/jupyter lab src/research/
 ```
 
-**These are skeletons — headings and instructions only, no code.** Fill them in
-yourself; that is the research deliverable.
+Both notebooks run top to bottom and carry their outputs. `model-training.ipynb` also
+saves the report's exhibits to `research/figures/`.
 
-- **`TODO_RESEARCH.md`** — the question list. 36 questions in six parts, plus Part 6
-  which lists every decision already hardcoded in `src/` with a hint for re-deriving
-  it. Start here.
-- **`data-analysis.ipynb`** — EDA. Maps to Part 1 of the questionnaire.
-- **`model-training.ipynb`** — signal selection, robustness, sizing, sensitivity.
-  Maps to Parts 2–5.
+- **`RESEARCH_LOG.md`** — the research log: the questions this work set out to answer,
+  in six parts, with Part 6 covering every decision hardcoded in `src/` and how each
+  was re-derived.
+- **`data-analysis.ipynb`** — EDA: data quality, return distributions, volatility
+  clustering, correlation structure and covariance conditioning. Answers Part 1.
+- **`model-training.ipynb`** — signal selection, look-ahead control, robustness,
+  sizing, sensitivity, walk-forward and the overfitting audit. Answers Parts 2–5.
 
 ## 6. Sensitivity analysis
 
@@ -179,9 +180,9 @@ extraction and helpers, `research/` for analysis, `engine.py` kept concise).
 | `src/models/volatility.py` | rolling / EWMA / Parkinson / blended vol estimators |
 | `src/models/covariance.py` | Ledoit-Wolf shrinkage covariance |
 | `src/models/optimizer.py` | sizing rules, caps, vol targeting, no-trade band |
-| `src/research/TODO_RESEARCH.md` | **start here** — 36 questions + hints for re-deriving hardcoded choices |
-| `src/research/data-analysis.ipynb` | EDA notebook — **skeleton, you write it** |
-| `src/research/model-training.ipynb` | signal/model notebook — **skeleton, you write it** |
+| `src/research/RESEARCH_LOG.md` | **start here** — the research log, incl. how each hardcoded choice was re-derived |
+| `src/research/data-analysis.ipynb` | EDA notebook — data quality, distributions, volatility, correlation |
+| `src/research/model-training.ipynb` | signal selection, robustness, sizing, validation, overfitting audit |
 | `src/research/signal_eval.py` | tool: IC / Fama-MacBeth / spread / bootstrap |
 | `src/research/sweep.py` | tool: parameter sensitivity via the real backtester |
 | `src/research/validate.py` | 28 self-checks incl. planted look-ahead leaks |
