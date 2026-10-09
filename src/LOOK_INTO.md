@@ -1,6 +1,6 @@
 # What each file does, and why each parameter is what it is
 
-Read this before `research/TODO_RESEARCH.md`. This is the map; that is the homework.
+Read this before `research/RESEARCH_LOG.md`. This is the map; that is the homework.
 Everything here is one or two lines — the reasoning in depth lives in the questionnaire.
 
 ---
@@ -147,7 +147,7 @@ Four sizing rules, ordered by how much they trust the covariance matrix:
 
 | file | what |
 |---|---|
-| `TODO_RESEARCH.md` | the questionnaire — 91 questions in 9 parts, start here |
+| `RESEARCH_LOG.md` | the questionnaire — 91 questions in 9 parts, start here |
 | `data-analysis.ipynb` | EDA skeleton, you write it |
 | `model-training.ipynb` | signal/model skeleton, you write it |
 | `signal_eval.py` | tool: IC, Fama-MacBeth, spread portfolios, bootstrap |
@@ -189,7 +189,7 @@ you get is an honest estimate rather than a maximum. Its IC lands between the me
 
 ---
 
-## Four framings to avoid (corrected in `research/EXTRA_SHI.md`)
+## Four framings to avoid (corrected in `research/REPORT_OUTLINE.md`)
 
 Easy mistakes to make when writing this up, each of which an interviewer can unpick:
 
